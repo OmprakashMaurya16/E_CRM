@@ -3,14 +3,9 @@ const DataEntity = require("../models/dataEntity.model");
 const { generateToken } = require("../utils/jwt");
 const cloudinary = require("../config/cloudinary");
 const bcrypt = require("bcrypt");
-const fs = require("fs");
+const stream = require("stream");
 
-const ALLOWED_ROLES = [
-  "DATA_PRINCIPAL",
-  "DATA_FIDUCIARY",
-  "DATA_PROCESSOR",
-  "ADMIN",
-];
+const ALLOWED_ROLES = ["DATA_PRINCIPAL", "DATA_FIDUCIARY", "DATA_PROCESSOR"];
 
 const registerUser = async (req, res) => {
   try {
@@ -42,12 +37,19 @@ const registerUser = async (req, res) => {
         return res.status(400).json({ message: "Logo required" });
       }
 
-      let upload;
-      try {
-        upload = await cloudinary.uploader.upload(req.file.path);
-      } finally {
-        fs.unlinkSync(req.file.path);
-      }
+      const upload = await new Promise((resolve, reject) => {
+        const passthrough = new stream.PassThrough();
+        const options = { folder: "ecrm/logos" };
+        const uploader = cloudinary.uploader.upload_stream(
+          options,
+          (err, result) => {
+            if (err) return reject(err);
+            resolve(result);
+          }
+        );
+        passthrough.end(req.file.buffer);
+        passthrough.pipe(uploader);
+      });
 
       const entity = await DataEntity.create({
         name: req.body.entityName,
@@ -92,10 +94,21 @@ const loginUser = async (req, res) => {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
+    const dataEntityUser = {
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      entityId: user.entityId,
+      status: user.status,
+    };
+
     res.status(200).json({
       success: true,
       message: "Login successful",
       token: generateToken(user),
+      user: dataEntityUser,
     });
   } catch (error) {
     console.error("Login Error:", error.message);

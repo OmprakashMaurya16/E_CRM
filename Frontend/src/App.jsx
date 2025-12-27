@@ -1,11 +1,16 @@
-import React from "react";
 import { Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DataPrincipalDashboard from "./pages/Data Principal/DataPrincipalDashboard";
 import DataFiduciaryDashboard from "./pages/Data Fiduciary/DataFiduciaryDashboard";
 import DataProcessorDashboard from "./pages/Data Processor/DataProcessorDashboard";
+import AppLayout from "./components/AppLayout";
+import MyConsentsPage from "./pages/Data Principal/MyConsentsPage";
+import UpdateWithdrawPage from "./pages/Data Principal/UpdateWithdrawPage";
+import NotificationsPage from "./pages/Data Principal/NotificationsPage";
+import ProfilePage from "./pages/Data Principal/ProfilePage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
+
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
@@ -29,10 +34,32 @@ const App = () => {
     return "/data-principal";
   };
 
+  const ProtectedRoute = ({ children }) => {
+    return isAuthenticated() ? children : <Navigate to="/login" replace />;
+  };
+
+  const RoleRoute = ({ allowedRoles = [], children }) => {
+    const role = getUserRole();
+    return allowedRoles.includes(role) ? (
+      children
+    ) : (
+      <Navigate to={roleHome()} replace />
+    );
+  };
+
   return (
     <>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route
+          path="/"
+          element={
+            isAuthenticated() ? (
+              <Navigate to={roleHome()} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
 
         <Route
           path="/login"
@@ -56,12 +83,68 @@ const App = () => {
           }
         />
 
-        <Route path="/data-principal" element={<DataPrincipalDashboard />} />
-        <Route path="/data-fiduciary" element={<DataFiduciaryDashboard />} />
-        <Route path="/data-processor" element={<DataProcessorDashboard />} />
-        <Route path="/admin" element={<AdminDashboard />} />
+        <Route
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["DATA_PRINCIPAL"]}>
+                <AppLayout />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/data-principal" element={<DataPrincipalDashboard />} />
+          <Route path="/my-consents" element={<MyConsentsPage />} />
+          <Route path="/update-withdraw" element={<UpdateWithdrawPage />} />
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
+        </Route>
 
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        <Route
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["DATA_FIDUCIARY"]}>
+                <AppLayout />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/data-fiduciary" element={<DataFiduciaryDashboard />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["DATA_PROCESSOR"]}>
+                <AppLayout />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/data-processor" element={<DataProcessorDashboard />} />
+        </Route>
+
+        <Route
+          element={
+            <ProtectedRoute>
+              <RoleRoute allowedRoles={["ADMIN"]}>
+                <AppLayout />
+              </RoleRoute>
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/admin" element={<AdminDashboard />} />
+        </Route>
+
+        <Route
+          path="*"
+          element={
+            isAuthenticated() ? (
+              <Navigate to={roleHome()} replace />
+            ) : (
+              <Navigate to="/login" replace />
+            )
+          }
+        />
       </Routes>
 
       <ToastContainer position="bottom-right" autoClose={2000} />

@@ -1,20 +1,26 @@
-import {
-  LayoutDashboard,
-  Shield,
-  RefreshCcw,
-  Bell,
-  User,
-  X,
-  LogOut,
-} from "lucide-react";
+import { X, LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import { getMenuByRole } from "./menuConfig";
 
 const Sidebar = ({ open, setOpen }) => {
   const navigate = useNavigate();
 
+  const getUserRole = () => {
+    try {
+      const raw = localStorage.getItem("user");
+      const user = raw ? JSON.parse(raw) : null;
+      return user?.role || localStorage.getItem("role") || null;
+    } catch {
+      return localStorage.getItem("role") || null;
+    }
+  };
+
+  const role = getUserRole();
+
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("role");
     setOpen(false);
     navigate("/login", { replace: true });
   };
@@ -44,53 +50,34 @@ const Sidebar = ({ open, setOpen }) => {
         </div>
 
         <nav className="space-y-2">
-          <NavLink
-            to="/data-principal"
-            className={linkClass}
-            onClick={() => setOpen(false)}
-          >
-            <LayoutDashboard size={18} />
-            Dashboard Overview
-          </NavLink>
-
-          <NavLink
-            to="/my-consents"
-            className={linkClass}
-            onClick={() => setOpen(false)}
-          >
-            <Shield size={18} />
-            My Consents
-          </NavLink>
-
-          <NavLink
-            to="/update-withdraw"
-            className={linkClass}
-            onClick={() => setOpen(false)}
-          >
-            <RefreshCcw size={18} />
-            Update / Withdraw
-          </NavLink>
+          {getMenuByRole(role).primary.map(({ to, icon: Icon, label }) => (
+            <NavLink
+              key={to}
+              to={to}
+              className={linkClass}
+              onClick={() => setOpen(false)}
+            >
+              <Icon size={18} />
+              {label}
+            </NavLink>
+          ))}
         </nav>
 
-        <div className="mt-10 border-t pt-6 space-y-2">
-          <NavLink
-            to="/notifications"
-            className={linkClass}
-            onClick={() => setOpen(false)}
-          >
-            <Bell size={18} />
-            Notifications
-          </NavLink>
-
-          <NavLink
-            to="/profile"
-            className={linkClass}
-            onClick={() => setOpen(false)}
-          >
-            <User size={18} />
-            Profile & Security
-          </NavLink>
-        </div>
+        {getMenuByRole(role).secondary.length > 0 && (
+          <div className="mt-10 border-t pt-6 space-y-2">
+            {getMenuByRole(role).secondary.map(({ to, icon: Icon, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={linkClass}
+                onClick={() => setOpen(false)}
+              >
+                <Icon size={18} />
+                {label}
+              </NavLink>
+            ))}
+          </div>
+        )}
 
         <div className="mt-auto border-t pt-6">
           <button

@@ -1,13 +1,7 @@
 import { useEffect, useState } from "react";
-import {
-  User,
-  Building2,
-  Workflow,
-  ShieldCheck,
-  Upload,
-  CheckCircle,
-} from "lucide-react";
+import { ShieldCheck, Upload, CheckCircle } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 import axios from "axios";
 import { toast } from "react-toastify";
 
@@ -20,7 +14,6 @@ const RegisterPage = () => {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [agree, setAgree] = useState(false);
 
-  // Org fields (for fiduciary)
   const [entityName, setEntityName] = useState("");
   const [entityEmail, setEntityEmail] = useState("");
   const [logoFile, setLogoFile] = useState(null);
@@ -28,7 +21,7 @@ const RegisterPage = () => {
 
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(
     () => () => logoPreview && URL.revokeObjectURL(logoPreview),
@@ -68,20 +61,28 @@ const RegisterPage = () => {
 
     try {
       setSubmitting(true);
-      const res = await axios.post(`${API_BASE}/api/auth/register`, form);
+      const res = await axios.post(`${API_BASE}/auth/register`, form);
 
       if (res?.data?.success) {
         if (res?.data?.token) localStorage.setItem("token", res.data.token);
+        // Ensure role is available for App's RoleRoute/roleHome
+        const returnedRole = res?.data?.user?.role;
+        localStorage.setItem("role", returnedRole || role);
+        if (res?.data?.user) {
+          try {
+            localStorage.setItem("user", JSON.stringify(res.data.user));
+          } catch {}
+        }
         toast.success("Account created successfully");
-        const r = role;
+        const r = returnedRole || role;
         navigate(
-          r === "DATA_PRINCIPAL"
-            ? "/data-principal"
-            : r === "DATA_FIDUCIARY"
+          r === "DATA_FIDUCIARY"
             ? "/data-fiduciary"
             : r === "DATA_PROCESSOR"
             ? "/data-processor"
-            : "/admin",
+            : r === "ADMIN"
+            ? "/admin"
+            : "/data-principal",
           { replace: true }
         );
       } else {
@@ -95,25 +96,23 @@ const RegisterPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-indigo-50 via-white to-blue-50 px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+        className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8"
       >
-        <div className="text-left mb-6">
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-700">
-            <ShieldCheck className="h-4 w-4" />
-            <span>NEW ENTITY</span>
+        <div className="flex items-center gap-3 mb-6">
+          <img src={logo} alt="Logo" className="w-10 h-10 rounded" />
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">
+              Create Account
+            </h1>
+            <p className="text-xs text-gray-500">
+              Manage and track consent seamlessly
+            </p>
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-gray-900">
-            Register
-          </h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Create an account to manage consent records.
-          </p>
         </div>
 
-        {/* Role select instead of segmented buttons */}
         <div className="mb-4">
           <label className="block text-xs font-semibold text-gray-500 mb-2">
             I am registering as a...
@@ -126,11 +125,9 @@ const RegisterPage = () => {
             <option value="DATA_PRINCIPAL">Data Principal</option>
             <option value="DATA_FIDUCIARY">Data Fiduciary</option>
             <option value="DATA_PROCESSOR">Data Processor</option>
-            {/* Admin registration removed: Admins should log in directly */}
           </select>
         </div>
 
-        {/* Conditional org fields (fiduciary only) */}
         {role === "DATA_FIDUCIARY" && (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
@@ -149,7 +146,7 @@ const RegisterPage = () => {
                 required
               />
             </div>
-            <label className="flex items-center gap-3 px-3 py-2 border rounded-lg cursor-pointer text-sm mb-4">
+            <label className="flex items-center gap-3 px-3 py-2 border rounded-lg cursor-pointer text-sm mb-4 hover:bg-gray-50">
               {logoPreview ? (
                 <img
                   src={logoPreview}
@@ -233,7 +230,7 @@ const RegisterPage = () => {
         <button
           type="submit"
           disabled={!canSubmit() || submitting}
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 shadow-sm"
         >
           <ShieldCheck className="inline h-4 w-4 mr-2" />
           {submitting ? "Creating..." : "Create Account"}

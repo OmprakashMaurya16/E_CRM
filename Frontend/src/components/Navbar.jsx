@@ -1,14 +1,28 @@
 import { Link } from "react-router-dom";
+import logo from "../assets/logo.png";
 
 const Navbar = ({ setSidebarOpen }) => {
+  const getUserRole = () => {
+    try {
+      const raw = localStorage.getItem("user");
+      const user = raw ? JSON.parse(raw) : null;
+      return user?.role || localStorage.getItem("role") || null;
+    } catch {
+      return localStorage.getItem("role") || null;
+    }
+  };
+
+  const roleHome = () => {
+    const r = getUserRole();
+    if (r === "DATA_FIDUCIARY") return "/data-fiduciary";
+    if (r === "DATA_PROCESSOR") return "/data-processor";
+    if (r === "ADMIN") return "/admin";
+    return "/data-principal";
+  };
   return (
     <nav className="h-16 flex items-center justify-between   px-6 md:px-16 lg:px-24 xl:px-32 border-b border-gray-200 bg-white w-full">
-      <Link to="/data-principal" className="flex items-center gap-3">
-        <img
-          src="/logo.png"
-          alt="Logo"
-          className="w-10 h-auto object-contain"
-        />
+      <Link to={roleHome()} className="flex items-center gap-3">
+        <img src={logo} alt="Logo" className="w-10 h-auto object-contain" />
 
         <h1 className="text-xl font-semibold text-gray-800">
           Consent Management System

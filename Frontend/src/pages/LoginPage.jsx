@@ -1,20 +1,21 @@
 import { useEffect, useState } from "react";
 import { Mail, Lock, ShieldCheck } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
+import logo from "../assets/logo.png";
 import axios from "axios";
 import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [role, setRole] = useState("DATA_PRINCIPAL");
-  const [loginMethod, setLoginMethod] = useState("PASSWORD"); // PASSWORD | OTP
+  const [loginMethod, setLoginMethod] = useState("PASSWORD");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [otp, setOtp] = useState("");
-  const [otpStep, setOtpStep] = useState(1); // 1: request, 2: verify
+  const [otpStep, setOtpStep] = useState(1);
   const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
-  const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+  const API_BASE = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -40,7 +41,7 @@ const LoginPage = () => {
   const handlePasswordLogin = async () => {
     try {
       setLoading(true);
-      const res = await axios.post(`${API_BASE}/api/auth/login`, {
+      const res = await axios.post(`${API_BASE}/auth/login`, {
         email,
         password,
         role,
@@ -78,7 +79,7 @@ const LoginPage = () => {
     if (!email) return toast.error("Email is required");
     try {
       setLoading(true);
-      await axios.post(`${API_BASE}/api/auth/otp/request`, { email, role });
+      await axios.post(`${API_BASE}/auth/otp/request`, { email, role });
       toast.success("OTP sent to your email");
       setOtpStep(2);
     } catch (err) {
@@ -92,7 +93,7 @@ const LoginPage = () => {
     if (!otp) return toast.error("OTP is required");
     try {
       setLoading(true);
-      const res = await axios.post(`${API_BASE}/api/auth/otp/verify`, {
+      const res = await axios.post(`${API_BASE}/auth/otp/verify`, {
         email,
         otp,
         role,
@@ -134,23 +135,21 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+    <div className="min-h-screen bg-linear-to-br from-indigo-50 via-white to-blue-50 flex items-center justify-center px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-white rounded-2xl shadow-sm border border-gray-200 p-6"
+        className="w-full max-w-md bg-white rounded-2xl shadow-lg border border-gray-100 p-6 md:p-8"
       >
-        <div className="text-left mb-6">
-          <div className="flex items-center gap-2 text-xs font-semibold text-blue-700">
-            <ShieldCheck className="h-4 w-4" />
-            <span>SECURE ACCESS</span>
+        <div className="flex items-center gap-3 mb-6">
+          <img src={logo} alt="Logo" className="w-10 h-10 rounded" />
+          <div>
+            <h1 className="text-xl font-semibold text-gray-900">Sign In</h1>
+            <p className="text-xs text-gray-500">
+              Access your dashboard securely
+            </p>
           </div>
-          <h1 className="mt-2 text-2xl font-semibold text-gray-900">Sign In</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Access your dashboard securely.
-          </p>
         </div>
 
-        {/* Role select */}
         <div className="mb-6">
           <label className="block text-xs font-semibold text-gray-500 mb-2">
             Select Your Role
@@ -278,7 +277,7 @@ const LoginPage = () => {
             (loginMethod === "PASSWORD" && !password) ||
             (loginMethod === "OTP" && otpStep === 2 && !otp)
           }
-          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+          className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-lg text-sm font-medium disabled:opacity-50 shadow-sm"
         >
           <ShieldCheck className="h-4 w-4 inline mr-2" />
           {loading
