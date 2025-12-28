@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const connectDB = require("./config/dataBase");
 const authRoutes = require("./routes/auth.routes");
+const consentRoutes = require("./routes/consent.routes");
 
 const app = express();
 connectDB();
@@ -19,6 +20,7 @@ app.use(
 );
 
 app.use("/api/auth", authRoutes);
+app.use("/api", consentRoutes);
 
 app.get("/", (req, res) => {
   res.send("E-CRM Backend is running");

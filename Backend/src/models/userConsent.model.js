@@ -14,6 +14,12 @@ const userConsentSchema = new mongoose.Schema(
       required: true,
     },
 
+    consentMetaDataId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "ConsentMetaData",
+      required: true,
+    },
+
     purposeId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Purpose",
