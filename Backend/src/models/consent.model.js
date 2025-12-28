@@ -33,3 +33,7 @@ const ConsentSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+const ConsentModel = mongoose.model("Consent", ConsentSchema);
+
+module.exports = ConsentModel;
