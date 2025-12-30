@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.png";
+import { useSearch } from "../context/SearchContext";
 
 const Navbar = ({ setSidebarOpen }) => {
   const getUserRole = () => {
@@ -19,8 +20,10 @@ const Navbar = ({ setSidebarOpen }) => {
     if (r === "ADMIN") return "/admin";
     return "/data-principal";
   };
+  const { searchText, setSearchText } = useSearch();
+
   return (
-    <nav className="h-16 flex items-center justify-between   px-6 md:px-16 lg:px-24 xl:px-32 border-b border-gray-200 bg-white w-full">
+    <nav className="fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 md:px-16 lg:px-24 xl:px-32 border-b border-gray-200 bg-white w-full">
       <Link to={roleHome()} className="flex items-center gap-3">
         <img src={logo} alt="Logo" className="w-10 h-auto object-contain" />
 
@@ -33,7 +36,9 @@ const Navbar = ({ setSidebarOpen }) => {
         <input
           className="py-1.5 w-full bg-transparent outline-none placeholder-gray-500"
           type="text"
-          placeholder="Search Content"
+          placeholder="Search consents…"
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
         />
         <svg
           width="16"

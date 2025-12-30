@@ -34,7 +34,7 @@ const Sidebar = ({ open, setOpen }) => {
 
   return (
     <aside
-      className={`fixed md:static z-50 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r-2 border-gray-100 px-4 py-6 transform transition-transform
+      className={`fixed z-40 top-16 left-0 h-[calc(100vh-4rem)] w-64 bg-white border-r-2 border-gray-100 px-4 py-6 transform transition-transform
       ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}
     >
       <div className="flex flex-col h-full">
