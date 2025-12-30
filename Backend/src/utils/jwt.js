@@ -8,7 +8,7 @@ const generateToken = (user) => {
       entityId: user.entityId || null,
     },
     process.env.JWT_SECRET,
-    { expiresIn: "1h" }
+    { expiresIn: "7d" }
   );
 };
 

@@ -17,6 +17,8 @@ const listAllConsents = async (req, res) => {
       },
     ]);
 
+    console.log(userConsents);
+
     res.status(200).json({ success: true, data: userConsents });
   } catch (error) {
     console.error("Error fetching user consents:", error.message);

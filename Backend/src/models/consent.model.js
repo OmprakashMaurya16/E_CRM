@@ -27,8 +27,8 @@ const ConsentSchema = new mongoose.Schema(
 
     status: {
       type: String,
-      enum: ["ACTIVE", "INACTIVE"],
-      default: "ACTIVE",
+      enum: ["PENDING", "GRANTED", "WITHDRAWN", "EXPIRED"],
+      default: "PENDING",
     },
   },
   { timestamps: true }

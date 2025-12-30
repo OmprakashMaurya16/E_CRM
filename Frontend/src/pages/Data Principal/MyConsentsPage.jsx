@@ -1,7 +1,7 @@
 import React from "react";
 
 const MyConsentsPage = () => {
-  return <div>MyConsentsPage</div>;
+  return <div></div>;
 };
 
 export default MyConsentsPage;
