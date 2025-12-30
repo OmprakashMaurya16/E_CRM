@@ -21,8 +21,7 @@ const MyConsentsPage = () => {
       setError("");
       const token = localStorage.getItem("token");
       const base = import.meta.env.VITE_API_BASE_URL || "";
-      const url = base ? `${base}/consents` : `consents`;
-      const res = await axios.get(url, {
+      const res = await axios.get(`${base}/consents`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setConsents(Array.isArray(res.data?.data) ? res.data.data : []);

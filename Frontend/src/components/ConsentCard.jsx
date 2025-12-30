@@ -108,7 +108,7 @@ const ConsentCard = ({ consent }) => {
       <div className="mt-4 flex items-center gap-2">
         <button
           className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
-          onClick={() => navigate("/details", { state: { id: consent._id } })}
+          onClick={() => navigate(`/details/${consent?.consentId?._id}`)}
         >
           View Details
         </button>
