@@ -98,7 +98,7 @@ const MyConsentsPage = () => {
       const name = c?.consentId?.dataEntityId?.name?.trim();
       return name === fiduciaryFilter;
     });
-    // Search filter
+
     const q = (searchText || "").trim().toLowerCase();
     if (q) {
       data = data.filter((c) => {
@@ -240,7 +240,11 @@ const MyConsentsPage = () => {
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
               {pageItems.map((c) => (
-                <ConsentCard key={c?._id} consent={c} />
+                <ConsentCard
+                  key={c?._id}
+                  consent={c}
+                  onWithdraw={fetchConsents}
+                />
               ))}
             </div>
 

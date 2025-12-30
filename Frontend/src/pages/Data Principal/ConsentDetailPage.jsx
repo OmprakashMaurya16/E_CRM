@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import { toast } from "react-toastify";
 import jsPDF from "jspdf";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import {
@@ -62,6 +63,7 @@ const ConsentDetailPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [withdrawing, setWithdrawing] = useState(false);
 
   const fetchConsentDetail = async () => {
     try {
@@ -128,11 +130,28 @@ const ConsentDetailPage = () => {
 
   const canWithdraw = status === "GRANTED";
 
-  const handleWithdraw = () => {
+  const handleWithdraw = async () => {
     if (!data?._id) return;
-    navigate("/update-withdraw", {
-      state: { id: data._id, action: "withdraw" },
-    });
+    const ok = window.confirm(
+      "Are you sure you want to withdraw this consent?"
+    );
+    if (!ok) return;
+    try {
+      setWithdrawing(true);
+      const token = localStorage.getItem("token");
+      const base = import.meta.env.VITE_API_BASE_URL || "";
+      const res = await axios.post(
+        `${base}/consents/${data._id}/withdraw`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(res?.data?.message || "Consent withdrawn");
+      await fetchConsentDetail();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to withdraw consent");
+    } finally {
+      setWithdrawing(false);
+    }
   };
 
   const handleDownload = () => {
@@ -141,7 +160,6 @@ const ConsentDetailPage = () => {
       const marginX = 40;
       let y = 50;
 
-      // Title
       doc.setFontSize(18);
       doc.text("Consent Details", marginX, y);
       y += 24;
@@ -150,7 +168,6 @@ const ConsentDetailPage = () => {
       doc.text("Detailed view of your data sharing consent", marginX, y);
       y += 24;
 
-      // Status + Dates
       doc.setTextColor(0);
       doc.setFontSize(12);
       doc.text(
@@ -164,7 +181,6 @@ const ConsentDetailPage = () => {
       doc.text(`Expiry Date: ${formatDate(data?.expiryAt)}`, marginX, y);
       y += 28;
 
-      // Purpose Information
       doc.setFontSize(13);
       doc.text("Purpose Information", marginX, y);
       y += 18;
@@ -184,7 +200,6 @@ const ConsentDetailPage = () => {
       doc.text(descLines, marginX, y);
       y += 16 * descLines.length + 12;
 
-      // Metadata
       doc.setFontSize(13);
       doc.text("Metadata", marginX, y);
       y += 18;
@@ -210,7 +225,6 @@ const ConsentDetailPage = () => {
       );
       y += 28;
 
-      // Data Fiduciary
       doc.setFontSize(13);
       doc.text("Data Fiduciary", marginX, y);
       y += 18;
@@ -234,15 +248,12 @@ const ConsentDetailPage = () => {
       );
       y += 24;
 
-      // Footer
       doc.setFontSize(10);
       doc.setTextColor(120);
       doc.text(`Generated on ${new Date().toLocaleString()}`, marginX, 820);
 
       doc.save(`consent_${data?._id || consentId}.pdf`);
-    } catch (e) {
-      // Optional: show a toast error
-    }
+    } catch (e) {}
   };
 
   return (
@@ -356,14 +367,16 @@ const ConsentDetailPage = () => {
           </div>
         </div>
         <div className="flex gap-3">
-          <button
-            disabled={!canWithdraw}
-            onClick={handleWithdraw}
-            className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg disabled:opacity-50"
-          >
-            <XCircle size={16} className="inline mr-1" />
-            Withdraw Consent
-          </button>
+          {canWithdraw && (
+            <button
+              disabled={withdrawing}
+              onClick={handleWithdraw}
+              className="px-4 py-2 text-sm border border-red-300 text-red-600 rounded-lg disabled:opacity-50"
+            >
+              <XCircle size={16} className="inline mr-1" />
+              {withdrawing ? "Withdrawing…" : "Withdraw Consent"}
+            </button>
+          )}
           <button
             onClick={handleDownload}
             className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg"

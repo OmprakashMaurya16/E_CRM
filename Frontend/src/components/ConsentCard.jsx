@@ -1,6 +1,8 @@
 import { BadgeCheck, Clock, RefreshCw, Shield, XCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
 
 const formatDate = (d) => {
   if (!d) return "-";
@@ -32,7 +34,7 @@ const STATUS_META = {
   },
 };
 
-const ConsentCard = ({ consent }) => {
+const ConsentCard = ({ consent, onWithdraw }) => {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
@@ -50,6 +52,28 @@ const ConsentCard = ({ consent }) => {
 
   const canWithdraw = status === "GRANTED";
   const canRenew = status === "EXPIRED";
+
+  const handleWithdraw = async () => {
+    const ok = window.confirm(
+      "Are you sure you want to withdraw this consent?"
+    );
+    if (!ok) return;
+    try {
+      const token = localStorage.getItem("token");
+      const base = import.meta.env.VITE_API_BASE_URL || "";
+      await axios.post(
+        `${base}/consents/${consent?._id}/withdraw`,
+        {},
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      toast.success("Consent withdrawn");
+      if (typeof onWithdraw === "function") onWithdraw();
+    } catch (err) {
+      toast.error(err?.response?.data?.message || "Failed to withdraw consent");
+    }
+  };
 
   return (
     <div className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow">
@@ -116,11 +140,7 @@ const ConsentCard = ({ consent }) => {
         {canWithdraw && (
           <button
             className="px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
-            onClick={() =>
-              navigate("/update", {
-                state: { id: consent._id, action: "withdraw" },
-              })
-            }
+            onClick={handleWithdraw}
           >
             Withdraw
           </button>

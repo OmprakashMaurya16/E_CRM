@@ -9,7 +9,6 @@ export const getMenuByRole = (role) => {
         icon: LayoutDashboard,
       },
       { to: "/my-consents", label: "My Consents", icon: Shield },
-      { to: "/update-withdraw", label: "Update / Withdraw", icon: RefreshCcw },
     ],
     DATA_FIDUCIARY: [
       {
@@ -17,7 +16,6 @@ export const getMenuByRole = (role) => {
         label: "Dashboard Overview",
         icon: LayoutDashboard,
       },
-      // Add more fiduciary links here
     ],
     DATA_PROCESSOR: [
       {
@@ -25,7 +23,6 @@ export const getMenuByRole = (role) => {
         label: "Dashboard Overview",
         icon: LayoutDashboard,
       },
-      // Add more processor links here
     ],
     ADMIN: [
       { to: "/admin", label: "Dashboard Overview", icon: LayoutDashboard },
