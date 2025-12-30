@@ -6,7 +6,6 @@ import DataFiduciaryDashboard from "./pages/Data Fiduciary/DataFiduciaryDashboar
 import DataProcessorDashboard from "./pages/Data Processor/DataProcessorDashboard";
 import AppLayout from "./components/AppLayout";
 import MyConsentsPage from "./pages/Data Principal/MyConsentsPage";
-import UpdateWithdrawPage from "./pages/Data Principal/UpdateWithdrawPage";
 import NotificationsPage from "./pages/Data Principal/NotificationsPage";
 import ProfilePage from "./pages/Data Principal/ProfilePage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";

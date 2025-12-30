@@ -118,7 +118,136 @@ const loginUser = async (req, res) => {
   }
 };
 
+const getProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const data = {
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      entityId: user.entityId,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    return res.status(200).json({ success: true, user: data });
+  } catch (error) {
+    console.error("Get Profile Error:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server Error while fetching profile" });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const { fullName, phone } = req.body;
+
+    if (typeof fullName === "string") {
+      const trimmed = fullName.trim();
+      if (trimmed.length < 3 || trimmed.length > 50) {
+        return res.status(400).json({
+          success: false,
+          message: "Full name must be 3-50 characters",
+        });
+      }
+      user.fullName = trimmed;
+    }
+
+    if (typeof phone === "string") {
+      user.phone = phone.trim() || null;
+    }
+
+    await user.save();
+
+    const data = {
+      id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      entityId: user.entityId,
+      status: user.status,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    };
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Profile updated", user: data });
+  } catch (error) {
+    console.error("Update Profile Error:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Server Error while updating profile" });
+  }
+};
+
+const changePassword = async (req, res) => {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Current and new passwords are required",
+      });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
+
+    const valid = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!valid) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Current password is incorrect" });
+    }
+
+    user.passwordHash = newPassword;
+    await user.save();
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Password changed successfully" });
+  } catch (error) {
+    console.error("Change Password Error:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Server Error while changing password",
+    });
+  }
+};
+
+const logout = async (_req, res) => {
+  return res.status(200).json({ success: true, message: "Logged out" });
+};
+
 module.exports = {
   registerUser,
   loginUser,
+  getProfile,
+  updateProfile,
+  changePassword,
+  logout,
 };
