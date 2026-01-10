@@ -65,7 +65,7 @@ const RegisterPage = () => {
 
       if (res?.data?.success) {
         if (res?.data?.token) localStorage.setItem("token", res.data.token);
-        // Ensure role is available for App's RoleRoute/roleHome
+
         const returnedRole = res?.data?.user?.role;
         localStorage.setItem("role", returnedRole || role);
         if (res?.data?.user) {

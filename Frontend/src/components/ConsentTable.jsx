@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import axios from "axios";
 
 const formatDate = (value) => {
@@ -26,7 +26,7 @@ const formatMethod = (value) => {
   }
 };
 
-const ConsentTable = () => {
+const ConsentTable = ({ data, title, viewAllPath, status }) => {
   const navigate = useNavigate();
   const [consents, setConsents] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +34,19 @@ const ConsentTable = () => {
 
   useEffect(() => {
     const fetchConsents = async () => {
+      // If `data` is passed, use it directly
+      if (Array.isArray(data)) {
+        try {
+          const filtered = status ? data.filter((c) => c.status === status) : data;
+          setConsents(filtered.slice(0, 5));
+        } catch {
+          setConsents([]);
+        } finally {
+          setIsLoading(false);
+        }
+        return;
+      }
+
       try {
         const token = localStorage.getItem("token");
         const response = await axios.get(
@@ -47,8 +60,8 @@ const ConsentTable = () => {
           ? response.data.data
           : [];
 
-        // Dashboard = ACTIVE ONLY
-        setConsents(raw.filter((c) => c.status === "GRANTED").slice(0, 5));
+        const filtered = status ? raw.filter((c) => c.status === status) : raw;
+        setConsents(filtered.filter((c) => c.status === "GRANTED").slice(0, 5));
       } catch {
         setError("Failed to load active consents.");
       } finally {
@@ -57,15 +70,27 @@ const ConsentTable = () => {
     };
 
     fetchConsents();
-  }, []);
+  }, [data, status]);
+
+  const headerTitle = useMemo(() => {
+    if (title) return title;
+    if (status === "WITHDRAWN") return "Withdrawn Consents";
+    if (status === "EXPIRED") return "Expired Consents";
+    return "Active Consents";
+  }, [title, status]);
+
+  const viewAllTarget = useMemo(() => {
+    if (viewAllPath) return viewAllPath;
+    return "/my-consents";
+  }, [viewAllPath]);
 
   return (
     <div className="bg-white shadow rounded-xl p-6 mt-10">
       <div className="flex justify-between items-center mb-6">
-        <h3 className="font-semibold text-gray-900">Active Consents</h3>
+        <h3 className="font-semibold text-gray-900">{headerTitle}</h3>
         <span
           className="text-blue-600 text-sm cursor-pointer hover:underline"
-          onClick={() => navigate("/my-consents")}
+          onClick={() => navigate(viewAllTarget)}
         >
           View All →
         </span>
@@ -109,7 +134,13 @@ const ConsentTable = () => {
                   <td>{c?.consentId?.dataEntityId?.name || "-"}</td>
                   <td>
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-                      Active
+                      {c.status === "GRANTED"
+                        ? "Active"
+                        : c.status === "WITHDRAWN"
+                        ? "Withdrawn"
+                        : c.status === "EXPIRED"
+                        ? "Expired"
+                        : c.status || "-"}
                     </span>
                   </td>
                   <td>{formatDate(c.givenAt)}</td>

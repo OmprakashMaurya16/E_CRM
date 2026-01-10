@@ -3,7 +3,7 @@ import Card from "./Card";
 import { useState, useEffect } from "react";
 import axios from "axios";
 
-const CardSummary = () => {
+const CardSummary = ({ onCardClick }) => {
   const [consents, setConsents] = useState([]);
 
   useEffect(() => {

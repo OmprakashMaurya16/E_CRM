@@ -3,8 +3,9 @@ const ConsentMetaData = require("../models/consentMetaData.model");
 const DataEntity = require("../models/dataEntity.model");
 const Consent = require("../models/consent.model");
 const Purpose = require("../models/purpose.model");
+const User = require("../models/user.model");
 
-const listAllConsents = async (req, res) => {
+const listAllUserConsents = async (req, res) => {
   try {
     const userId = req.user.userId;
 
@@ -26,7 +27,7 @@ const listAllConsents = async (req, res) => {
   }
 };
 
-const singleConsent = async (req, res) => {
+const singleUserConsent = async (req, res) => {
   try {
     const userId = req.user.userId;
     const consentId = req.params.consentId;
@@ -55,7 +56,7 @@ const singleConsent = async (req, res) => {
   }
 };
 
-const withdrawConsent = async (req, res) => {
+const withdrawUserConsent = async (req, res) => {
   try {
     const userId = req.user.userId;
     const userConsentId = req.params.userConsentId;
@@ -110,8 +111,125 @@ const withdrawConsent = async (req, res) => {
   }
 };
 
+const getFiduciaryConsents = async (req, res) => {
+  try {
+    const fiduciaryId = req.user?.entityId;
+
+    if (!fiduciaryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing fiduciary context",
+      });
+    }
+
+    const consentIds = await Consent.find({
+      dataEntityId: fiduciaryId,
+    }).distinct("_id");
+
+    const [userConsents, distinctPrincipals, activeProcessors] =
+      await Promise.all([
+        UserConsent.find({ consentId: { $in: consentIds } }).populate([
+          { path: "consentId", populate: { path: "dataEntityId" } },
+          { path: "purposeId" },
+          {
+            path: "consentMetaDataId",
+            select: "methodOfCollection version",
+          },
+        ]),
+        UserConsent.distinct("userId", { consentId: { $in: consentIds } }),
+        DataEntity.countDocuments({
+          entityType: "DATA_PROCESSOR",
+          status: "ACTIVE",
+        }),
+      ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        consentsList: userConsents,
+        metrics: {
+          consents: userConsents.length,
+          principals: distinctPrincipals.length,
+          processors: activeProcessors,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching fiduciary data:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const getFiduciaryPrincipals = async (req, res) => {
+  try {
+    const fiduciaryId = req.user?.entityId;
+
+    if (!fiduciaryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing fiduciary context",
+      });
+    }
+
+    const consentIds = await Consent.find({
+      dataEntityId: fiduciaryId,
+    }).distinct("_id");
+
+    const principalIds = await UserConsent.distinct("userId", {
+      consentId: { $in: consentIds },
+    });
+
+    const principals = await User.find({ _id: { $in: principalIds } }).select(
+      "name email role createdAt"
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        principals,
+        metrics: { principals: principals.length },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching fiduciary principals:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+const getFiduciaryProcessors = async (req, res) => {
+  try {
+    const processors = await DataEntity.find({
+      entityType: "DATA_PROCESSOR",
+      status: "ACTIVE",
+    }).select("name status createdAt");
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        processors,
+        metrics: { processors: processors.length },
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching fiduciary processors:", error.message);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 module.exports = {
-  listAllConsents,
-  singleConsent,
-  withdrawConsent,
+  listAllUserConsents,
+  singleUserConsent,
+  withdrawUserConsent,
+  getFiduciaryConsents,
+  getFiduciaryPrincipals,
+  getFiduciaryProcessors,
 };

@@ -1,7 +1,11 @@
-import React from "react";
+import DataFiduciaryCard from "../../components/DataFiduciaryCard";
 
 const DataFiduciaryDashboard = () => {
-  return <div>DataFiduciaryDashboard</div>;
+  return (
+    <div>
+      <DataFiduciaryCard />
+    </div>
+  );
 };
 
 export default DataFiduciaryDashboard;
