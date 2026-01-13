@@ -3,13 +3,18 @@ import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import DataPrincipalDashboard from "./pages/Data Principal/DataPrincipalDashboard";
 import DataFiduciaryDashboard from "./pages/Data Fiduciary/DataFiduciaryDashboard";
+import ConsentsPage from "./pages/Data Fiduciary/ConsentsPage";
+import DataPrincipalsPage from "./pages/Data Fiduciary/DataPrincipalsPage";
 import DataProcessorDashboard from "./pages/Data Processor/DataProcessorDashboard";
 import AppLayout from "./components/AppLayout";
 import MyConsentsPage from "./pages/Data Principal/MyConsentsPage";
 import NotificationsPage from "./pages/Data Principal/NotificationsPage";
 import ProfilePage from "./pages/Data Principal/ProfilePage";
+import FiduciaryProfilePage from "./pages/Data Fiduciary/FiduciaryProfilePage";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ConsentDetailPage from "./pages/Data Principal/ConsentDetailPage";
+import DataProcessorPage from "./pages/Data Fiduciary/DataProcessorPage";
+import FiduciaryNotificationPage from "./pages/Data Fiduciary/FiduciaryNotificationPage";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -94,8 +99,7 @@ const App = () => {
         >
           <Route path="/data-principal" element={<DataPrincipalDashboard />} />
           <Route path="/my-consents" element={<MyConsentsPage />} />
-          <Route path="/notifications" element={<NotificationsPage />} />
-          <Route path="/profile" element={<ProfilePage />} />
+          {/* Data Principal scoped routes only */}
           <Route path="/details" element={<ConsentDetailPage />} />
           <Route path="/details/:consentId" element={<ConsentDetailPage />} />
         </Route>
@@ -110,6 +114,17 @@ const App = () => {
           }
         >
           <Route path="/data-fiduciary" element={<DataFiduciaryDashboard />} />
+          <Route path="/fiduciary/consents" element={<ConsentsPage />} />
+          <Route
+            path="/fiduciary/data-principals"
+            element={<DataPrincipalsPage />}
+          />
+          <Route path="/fiduciary/processors" element={<DataProcessorPage />} />
+          <Route
+            path="/fiduciary/notifications"
+            element={<FiduciaryNotificationPage />}
+          />
+          <Route path="/fiduciary/profile" element={<FiduciaryProfilePage />} />
         </Route>
 
         <Route

@@ -1,4 +1,11 @@
-import { LayoutDashboard, Shield, RefreshCcw, Bell, User } from "lucide-react";
+import {
+  LayoutDashboard,
+  Shield,
+  Database,
+  Bell,
+  User,
+  Users,
+} from "lucide-react";
 
 export const getMenuByRole = (role) => {
   const primary = {
@@ -15,6 +22,17 @@ export const getMenuByRole = (role) => {
         to: "/data-fiduciary",
         label: "Dashboard Overview",
         icon: LayoutDashboard,
+      },
+      { to: "/fiduciary/consents", label: "All Consents", icon: Shield },
+      {
+        to: "/fiduciary/data-principals",
+        label: "Data Principals",
+        icon: Users,
+      },
+      {
+        to: "/fiduciary/processors",
+        label: "Data Processors",
+        icon: Database,
       },
     ],
     DATA_PROCESSOR: [
@@ -35,7 +53,10 @@ export const getMenuByRole = (role) => {
       { to: "/notifications", label: "Notifications", icon: Bell },
       { to: "/profile", label: "Profile & Security", icon: User },
     ],
-    DATA_FIDUCIARY: [],
+    DATA_FIDUCIARY: [
+      { to: "/fiduciary/notifications", label: "Notifications", icon: Bell },
+      { to: "/fiduciary/profile", label: "Profile & Security", icon: User },
+    ],
     DATA_PROCESSOR: [],
     ADMIN: [],
   };

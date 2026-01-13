@@ -7,8 +7,8 @@ import FiduciaryProcessorsTable from "./FiduciaryProcessorsTable";
 import { ShieldCheck, Users, Database } from "lucide-react";
 
 const DataFiduciaryCard = () => {
-  const [showTable, setShowTable] = useState(false);
-  const [activeMetric, setActiveMetric] = useState(null);
+  const [showTable, setShowTable] = useState(true);
+  const [activeMetric, setActiveMetric] = useState("consents");
   const [isLoading, setIsLoading] = useState(true);
 
   const [metrics, setMetrics] = useState({
