@@ -37,7 +37,9 @@ const ConsentTable = ({ data, title, viewAllPath, status }) => {
       // If `data` is passed, use it directly
       if (Array.isArray(data)) {
         try {
-          const filtered = status ? data.filter((c) => c.status === status) : data;
+          const filtered = status
+            ? data.filter((c) => c.status === status)
+            : data;
           setConsents(filtered.slice(0, 5));
         } catch {
           setConsents([]);

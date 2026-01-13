@@ -19,6 +19,7 @@ const FiduciaryPrincipalsTable = () => {
         const list = Array.isArray(data?.data?.principals)
           ? data.data.principals
           : [];
+
         setPrincipals(list.slice(0, 5));
       } catch (err) {
         setError(err?.response?.data?.message || "Failed to load principals.");
@@ -68,8 +69,11 @@ const FiduciaryPrincipalsTable = () => {
             </thead>
             <tbody>
               {principals.map((u) => (
-                <tr key={u._id} className="border-b last:border-none hover:bg-gray-50">
-                  <td className="py-3">{u.name || u._id}</td>
+                <tr
+                  key={u._id}
+                  className="border-b last:border-none hover:bg-gray-50"
+                >
+                  <td className="py-3">{u.name || u.fullName || u._id}</td>
                   <td>{u.email || "-"}</td>
                   <td>{u.role || "DATA_PRINCIPAL"}</td>
                   <td>{new Date(u.createdAt).toLocaleDateString()}</td>

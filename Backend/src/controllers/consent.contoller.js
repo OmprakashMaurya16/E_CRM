@@ -183,7 +183,7 @@ const getFiduciaryPrincipals = async (req, res) => {
     });
 
     const principals = await User.find({ _id: { $in: principalIds } }).select(
-      "name email role createdAt"
+      "fullName email role createdAt"
     );
 
     return res.status(200).json({

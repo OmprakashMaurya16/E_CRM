@@ -67,7 +67,10 @@ const FiduciaryProcessorsTable = () => {
             </thead>
             <tbody>
               {processors.map((p) => (
-                <tr key={p._id} className="border-b last:border-none hover:bg-gray-50">
+                <tr
+                  key={p._id}
+                  className="border-b last:border-none hover:bg-gray-50"
+                >
                   <td className="py-3">{p.name || p._id}</td>
                   <td>
                     <span className="px-3 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
