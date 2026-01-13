@@ -97,7 +97,7 @@ const DataFiduciaryCard = () => {
               key="consents"
               data={consents}
               title="Consents"
-              viewAllPath="/data-fiduciary?view=consents"
+              viewAllPath="/fiduciary/consents"
             />
           )}
           {activeMetric === "principals" && (

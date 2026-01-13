@@ -99,7 +99,8 @@ const App = () => {
         >
           <Route path="/data-principal" element={<DataPrincipalDashboard />} />
           <Route path="/my-consents" element={<MyConsentsPage />} />
-          {/* Data Principal scoped routes only */}
+          <Route path="/notifications" element={<NotificationsPage />} />
+          <Route path="/profile" element={<ProfilePage />} />
           <Route path="/details" element={<ConsentDetailPage />} />
           <Route path="/details/:consentId" element={<ConsentDetailPage />} />
         </Route>
@@ -125,6 +126,12 @@ const App = () => {
             element={<FiduciaryNotificationPage />}
           />
           <Route path="/fiduciary/profile" element={<FiduciaryProfilePage />} />
+          <Route path="/details" element={<ConsentDetailPage />} />
+          <Route path="/details/:consentId" element={<ConsentDetailPage />} />
+          <Route
+            path="/fiduciary/details/:userConsentId"
+            element={<ConsentDetailPage />}
+          />
         </Route>
 
         <Route

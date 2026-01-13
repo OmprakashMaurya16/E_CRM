@@ -128,14 +128,16 @@ const getFiduciaryConsents = async (req, res) => {
 
     const [userConsents, distinctPrincipals, activeProcessors] =
       await Promise.all([
-        UserConsent.find({ consentId: { $in: consentIds } }).populate([
-          { path: "consentId", populate: { path: "dataEntityId" } },
-          { path: "purposeId" },
-          {
-            path: "consentMetaDataId",
-            select: "methodOfCollection version",
-          },
-        ]),
+        UserConsent.find({ consentId: { $in: consentIds } })
+          .populate([
+            { path: "consentId", populate: { path: "dataEntityId" } },
+            { path: "purposeId" },
+            {
+              path: "consentMetaDataId",
+              select: "methodOfCollection version",
+            },
+          ])
+          .populate({ path: "userId", select: "fullName" }),
         UserConsent.distinct("userId", { consentId: { $in: consentIds } }),
         DataEntity.countDocuments({
           entityType: "DATA_PROCESSOR",
@@ -225,6 +227,48 @@ const getFiduciaryProcessors = async (req, res) => {
   }
 };
 
+const getFiduciaryUserConsentDetail = async (req, res) => {
+  try {
+    const fiduciaryId = req.user?.entityId;
+    const userConsentId = req.params.userConsentId;
+
+    if (!fiduciaryId) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing fiduciary context",
+      });
+    }
+
+    const record = await UserConsent.findById(userConsentId).populate([
+      { path: "consentId", populate: { path: "dataEntityId" } },
+      { path: "purposeId" },
+      { path: "consentMetaDataId" },
+      { path: "userId", select: "fullName email" },
+    ]);
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Consent not found" });
+    }
+
+    const ownerEntityId = record?.consentId?.dataEntityId?._id;
+    if (!ownerEntityId || String(ownerEntityId) !== String(fiduciaryId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to view this consent",
+      });
+    }
+
+    return res.status(200).json({ success: true, data: record });
+  } catch (error) {
+    console.error("Error fetching fiduciary consent detail:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 module.exports = {
   listAllUserConsents,
   singleUserConsent,
@@ -232,4 +276,5 @@ module.exports = {
   getFiduciaryConsents,
   getFiduciaryPrincipals,
   getFiduciaryProcessors,
+  getFiduciaryUserConsentDetail,
 };

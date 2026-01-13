@@ -47,6 +47,19 @@ const LoginPage = () => {
         role,
       });
 
+      const userRole = res?.data?.user?.role;
+      // Enforce selected role must match account's role
+      if (userRole && userRole !== role) {
+        toast.error(
+          `No ${role.replace("_", " ").toLowerCase()} found for this email`
+        );
+        // Ensure no session is created
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        return;
+      }
+
       if (res?.data?.token) localStorage.setItem("token", res.data.token);
       if (res?.data?.user) {
         localStorage.setItem("user", JSON.stringify(res.data.user));
@@ -98,6 +111,17 @@ const LoginPage = () => {
         otp,
         role,
       });
+
+      const userRole = res?.data?.user?.role;
+      if (userRole && userRole !== role) {
+        toast.error(
+          `No ${role.replace("_", " ").toLowerCase()} found for this email`
+        );
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        localStorage.removeItem("role");
+        return;
+      }
 
       if (res?.data?.token) localStorage.setItem("token", res.data.token);
       if (res?.data?.user) {

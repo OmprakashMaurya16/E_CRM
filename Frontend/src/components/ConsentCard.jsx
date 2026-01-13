@@ -34,11 +34,29 @@ const STATUS_META = {
   },
 };
 
-const ConsentCard = ({ consent, onWithdraw }) => {
+const ConsentCard = ({
+  consent,
+  onWithdraw,
+  entityLabel = "Data Fiduciary",
+  entityName,
+  viewDetailsTarget,
+}) => {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
 
-  const status = consent?.status;
+  const now = new Date();
+  const vtVal = consent?.expiryAt || consent?.validTill;
+  const vt = vtVal ? new Date(vtVal) : null;
+  const status = (() => {
+    if (consent?.status === "WITHDRAWN") return "WITHDRAWN";
+    if (consent?.status === "EXPIRED") return "EXPIRED";
+    if (consent?.status === "GRANTED") {
+      if (vt && vt < now) return "EXPIRED";
+      return "GRANTED";
+    }
+    return consent?.status || "";
+  })();
+
   const meta = STATUS_META[status] || {
     label: status || "-",
     color: "bg-slate-100 text-slate-700",
@@ -48,6 +66,7 @@ const ConsentCard = ({ consent, onWithdraw }) => {
   const Icon = meta.icon;
 
   const org = consent?.consentId?.dataEntityId;
+  const displayName = (entityName || org?.name || "-").trim();
   const purpose = consent?.purposeId;
 
   const canWithdraw = status === "GRANTED";
@@ -80,22 +99,22 @@ const ConsentCard = ({ consent, onWithdraw }) => {
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-full bg-blue-50 flex items-center justify-center border overflow-hidden">
-            {org?.logoUrl && !imgError ? (
+            {org?.logoUrl && !imgError && !entityName ? (
               <img
                 src={org.logoUrl}
-                alt={org.name}
+                alt={displayName}
                 className="h-10 w-10 object-cover"
                 onError={() => setImgError(true)}
               />
             ) : (
               <span className="text-sm font-semibold text-blue-700">
-                {org?.name?.charAt(0)?.toUpperCase() || "?"}
+                {displayName?.charAt(0)?.toUpperCase() || "?"}
               </span>
             )}
           </div>
           <div>
-            <p className="font-semibold text-gray-900">{org?.name || "-"}</p>
-            <p className="text-xs text-gray-500">Data Fiduciary</p>
+            <p className="font-semibold text-gray-900">{displayName}</p>
+            <p className="text-xs text-gray-500">{entityLabel}</p>
           </div>
         </div>
 
@@ -132,7 +151,25 @@ const ConsentCard = ({ consent, onWithdraw }) => {
       <div className="mt-4 flex items-center gap-2">
         <button
           className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
-          onClick={() => navigate(`/details/${consent?.consentId?._id}`)}
+          onClick={() =>
+            viewDetailsTarget
+              ? navigate(viewDetailsTarget)
+              : (() => {
+                  // Role-aware navigation: fiduciary should use userConsent id
+                  try {
+                    const raw = localStorage.getItem("user");
+                    const user = raw ? JSON.parse(raw) : null;
+                    const role = user?.role || localStorage.getItem("role");
+                    if (role === "DATA_FIDUCIARY") {
+                      navigate(`/fiduciary/details/${consent?._id}`);
+                    } else {
+                      navigate(`/details/${consent?.consentId?._id}`);
+                    }
+                  } catch {
+                    navigate(`/details/${consent?.consentId?._id}`);
+                  }
+                })()
+          }
         >
           View Details
         </button>

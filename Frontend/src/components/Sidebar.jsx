@@ -1,6 +1,7 @@
 import { X, LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { getMenuByRole } from "./menuConfig";
+import { forceLogout } from "../utils/auth";
 
 const Sidebar = ({ open, setOpen }) => {
   const navigate = useNavigate();
@@ -18,11 +19,8 @@ const Sidebar = ({ open, setOpen }) => {
   const role = getUserRole();
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
     setOpen(false);
-    navigate("/login", { replace: true });
+    forceLogout();
   };
 
   const linkClass = ({ isActive }) =>

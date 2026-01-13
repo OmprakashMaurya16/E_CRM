@@ -53,12 +53,25 @@ const InfoRow = ({ label, value }) => (
   </div>
 );
 
+const getUserRole = () => {
+  try {
+    const raw = localStorage.getItem("user");
+    const user = raw ? JSON.parse(raw) : null;
+    return user?.role || localStorage.getItem("role") || null;
+  } catch {
+    return localStorage.getItem("role") || null;
+  }
+};
+
 const ConsentDetailPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const params = useParams();
 
   const consentId = location.state?.id || params.consentId;
+  const role = getUserRole();
+  const userConsentId =
+    location.state?.userConsentId || params.userConsentId || null;
 
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -71,7 +84,11 @@ const ConsentDetailPage = () => {
       setError("");
       const token = localStorage.getItem("token");
       const base = import.meta.env.VITE_API_BASE_URL || "";
-      const res = await axios.get(`${base}/consents/${consentId}`, {
+      const endpoint =
+        role === "DATA_FIDUCIARY"
+          ? `${base}/fiduciary/user-consents/${userConsentId}`
+          : `${base}/consents/${consentId}`;
+      const res = await axios.get(endpoint, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data?.data || null);
@@ -93,13 +110,22 @@ const ConsentDetailPage = () => {
   };
 
   useEffect(() => {
+    if (role === "DATA_FIDUCIARY") {
+      if (!userConsentId) {
+        setError("Missing consent record id");
+        setLoading(false);
+        return;
+      }
+      fetchConsentDetail();
+      return;
+    }
     if (!consentId) {
       setError("Missing consent id");
       setLoading(false);
       return;
     }
     fetchConsentDetail();
-  }, [consentId]);
+  }, [consentId, userConsentId, role]);
 
   if (loading) {
     return (
@@ -109,10 +135,6 @@ const ConsentDetailPage = () => {
 
   if (error) {
     return <div className="text-sm text-red-600">{error}</div>;
-  }
-
-  if (!data) {
-    return <div className="text-sm text-gray-500">No consent found.</div>;
   }
 
   const status = data?.status;
@@ -256,6 +278,9 @@ const ConsentDetailPage = () => {
     } catch (e) {}
   };
 
+  const backTarget =
+    role === "DATA_FIDUCIARY" ? "/fiduciary/consents" : "/my-consents";
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -267,9 +292,12 @@ const ConsentDetailPage = () => {
         </div>
         <button
           className="text-sm px-3 py-2 rounded-lg border hover:bg-gray-50 flex items-center gap-2"
-          onClick={() => navigate("/my-consents")}
+          onClick={() => navigate(backTarget)}
         >
-          <ArrowLeft size={16} /> Back to My Consents
+          <ArrowLeft size={16} />{" "}
+          {role === "DATA_FIDUCIARY"
+            ? "Back to All Consents"
+            : "Back to My Consents"}
         </button>
       </div>
 

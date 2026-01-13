@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { forceLogout } from "../../utils/auth";
 import axios from "axios";
 import { toast } from "react-toastify";
 import {
@@ -152,10 +153,7 @@ const FiduciaryProfilePage = () => {
         );
       }
     } catch {}
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    localStorage.removeItem("role");
-    navigate("/login", { replace: true });
+    forceLogout();
   };
 
   return (

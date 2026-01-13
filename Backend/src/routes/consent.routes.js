@@ -7,6 +7,7 @@ const {
   getFiduciaryConsents,
   getFiduciaryPrincipals,
   getFiduciaryProcessors,
+  getFiduciaryUserConsentDetail,
 } = require("../controllers/consent.contoller");
 const requireAuth = require("../middleware/requireAuth");
 
@@ -20,5 +21,10 @@ router.post(
 router.get("/fiduciary/consents", requireAuth, getFiduciaryConsents);
 router.get("/fiduciary/principals", requireAuth, getFiduciaryPrincipals);
 router.get("/fiduciary/processors", requireAuth, getFiduciaryProcessors);
+router.get(
+  "/fiduciary/user-consents/:userConsentId",
+  requireAuth,
+  getFiduciaryUserConsentDetail
+);
 
 module.exports = router;
