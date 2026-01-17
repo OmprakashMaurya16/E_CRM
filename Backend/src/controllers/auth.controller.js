@@ -45,7 +45,7 @@ const registerUser = async (req, res) => {
           (err, result) => {
             if (err) return reject(err);
             resolve(result);
-          }
+          },
         );
         passthrough.end(req.file.buffer);
         passthrough.pipe(uploader);

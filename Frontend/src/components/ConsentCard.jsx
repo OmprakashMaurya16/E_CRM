@@ -70,24 +70,42 @@ const ConsentCard = ({
   const purpose = consent?.purposeId;
 
   const canWithdraw = status === "GRANTED";
-  const canRenew = status === "EXPIRED";
+  const canRenew = status === "EXPIRED" || status === "WITHDRAWN";
 
   const handleWithdraw = async () => {
     const ok = window.confirm(
-      "Are you sure you want to withdraw this consent?"
+      "Are you sure? This will send a withdraw request to the Data Fiduciary.",
     );
     if (!ok) return;
     try {
       const token = localStorage.getItem("token");
       const base = import.meta.env.VITE_API_BASE_URL || "";
-      await axios.post(
-        `${base}/consents/${consent?._id}/withdraw`,
+      // Role-aware endpoint selection
+      let endpoint = `${base}/consents/${consent?._id}/withdraw`;
+      let isFiduciary = false;
+      try {
+        const raw = localStorage.getItem("user");
+        const user = raw ? JSON.parse(raw) : null;
+        const role = user?.role || localStorage.getItem("role");
+        if (role === "DATA_FIDUCIARY") {
+          endpoint = `${base}/fiduciary/user-consents/${consent?._id}/withdraw`;
+          isFiduciary = true;
+        }
+      } catch {}
+
+      const res = await axios.post(
+        endpoint,
         {},
         {
           headers: { Authorization: `Bearer ${token}` },
-        }
+        },
       );
-      toast.success("Consent withdrawn");
+      toast.success(
+        res?.data?.message ||
+          (isFiduciary
+            ? "Consent withdrawn"
+            : "Withdraw request sent to Data Fiduciary"),
+      );
       if (typeof onWithdraw === "function") onWithdraw();
     } catch (err) {
       toast.error(err?.response?.data?.message || "Failed to withdraw consent");
@@ -186,11 +204,46 @@ const ConsentCard = ({
         {canRenew && (
           <button
             className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
-            onClick={() =>
-              navigate("/renew", {
-                state: { id: consent._id, action: "renew" },
-              })
-            }
+            onClick={async () => {
+              const ok = window.confirm(
+                "Are you sure? This will send a renew request to the Data Fiduciary.",
+              );
+              if (!ok) return;
+              try {
+                const token = localStorage.getItem("token");
+                const base = import.meta.env.VITE_API_BASE_URL || "";
+                // Role-aware endpoint
+                let endpoint = `${base}/consents/${consent?._id}/renew`;
+                let isFiduciary = false;
+                try {
+                  const raw = localStorage.getItem("user");
+                  const user = raw ? JSON.parse(raw) : null;
+                  const role = user?.role || localStorage.getItem("role");
+                  if (role === "DATA_FIDUCIARY") {
+                    endpoint = `${base}/fiduciary/user-consents/${consent?._id}/renew`;
+                    isFiduciary = true;
+                  }
+                } catch {}
+                const res = await axios.post(
+                  endpoint,
+                  {},
+                  {
+                    headers: { Authorization: `Bearer ${token}` },
+                  },
+                );
+                toast.success(
+                  res?.data?.message ||
+                    (isFiduciary
+                      ? "Consent renewed"
+                      : "Renew request sent to Data Fiduciary"),
+                );
+                if (typeof onWithdraw === "function") onWithdraw();
+              } catch (err) {
+                toast.error(
+                  err?.response?.data?.message || "Failed to renew consent",
+                );
+              }
+            }}
           >
             <RefreshCw size={14} /> Renew
           </button>

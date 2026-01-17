@@ -1,10 +1,15 @@
+import { useEffect, useState } from "react";
 import { X, LogOut } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
+import axios from "axios";
 import { getMenuByRole } from "./menuConfig";
 import { forceLogout } from "../utils/auth";
 
 const Sidebar = ({ open, setOpen }) => {
   const navigate = useNavigate();
+  const [notificationCount, setNotificationCount] = useState(0);
+
+  const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
 
   const getUserRole = () => {
     try {
@@ -17,6 +22,36 @@ const Sidebar = ({ open, setOpen }) => {
   };
 
   const role = getUserRole();
+
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        let endpoint = null;
+        if (role === "DATA_FIDUCIARY") {
+          endpoint = `${API_BASE}/fiduciary/notifications/unread-count`;
+        } else if (role === "DATA_PRINCIPAL") {
+          endpoint = `${API_BASE}/principal/notifications/unread-count`;
+        }
+        if (!endpoint) return;
+        const { data } = await axios.get(endpoint, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const count =
+          typeof data?.count === "number"
+            ? data.count
+            : Number(data?.count) || 0;
+        setNotificationCount(count);
+      } catch {
+        setNotificationCount(0);
+      }
+    };
+
+    fetchNotificationCount();
+
+    const id = setInterval(fetchNotificationCount, 30000);
+    return () => clearInterval(id);
+  }, [API_BASE, role]);
 
   const handleLogout = () => {
     setOpen(false);
@@ -68,10 +103,21 @@ const Sidebar = ({ open, setOpen }) => {
                 key={to}
                 to={to}
                 className={linkClass}
-                onClick={() => setOpen(false)}
+                onClick={() => {
+                  setOpen(false);
+                  if (label === "Notifications") {
+                    // Optimistically clear the badge when user navigates
+                    setNotificationCount(0);
+                  }
+                }}
               >
                 <Icon size={18} />
                 {label}
+                {label === "Notifications" && notificationCount > 0 && (
+                  <span className="ml-auto inline-flex items-center justify-center px-2 py-0.5 text-xs font-semibold rounded-full bg-red-500 text-white">
+                    {notificationCount}
+                  </span>
+                )}
               </NavLink>
             ))}
           </div>

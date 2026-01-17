@@ -149,13 +149,15 @@ const ConsentDetailPage = () => {
   const purpose = data.purposeId;
   const org = data.consentId?.dataEntityId;
   const cm = data.consentMetaDataId;
+  // Only show Data Principal details when viewed in Data Fiduciary context
+  const principalUser = role === "DATA_FIDUCIARY" ? data.userId : null;
 
   const canWithdraw = status === "GRANTED";
 
   const handleWithdraw = async () => {
     if (!data?._id) return;
     const ok = window.confirm(
-      "Are you sure you want to withdraw this consent?"
+      "Are you sure you want to withdraw this consent?",
     );
     if (!ok) return;
     try {
@@ -165,7 +167,7 @@ const ConsentDetailPage = () => {
       const res = await axios.post(
         `${base}/consents/${data._id}/withdraw`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       toast.success(res?.data?.message || "Consent withdrawn");
       await fetchConsentDetail();
@@ -195,7 +197,7 @@ const ConsentDetailPage = () => {
       doc.text(
         `Status: ${STATUS_META[data?.status]?.label || data?.status || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 18;
       doc.text(`Given Date: ${formatDate(data?.givenAt)}`, marginX, y);
@@ -210,7 +212,7 @@ const ConsentDetailPage = () => {
       doc.text(
         `Purpose Name: ${data?.purposeId?.purposeName || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 16;
       doc.text(`Sector: ${data?.purposeId?.sector || "-"}`, marginX, y);
@@ -229,13 +231,13 @@ const ConsentDetailPage = () => {
       doc.text(
         `Consent Type: ${data?.consentId?.consentType || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 16;
       doc.text(
         `Version: ${data?.consentMetaDataId?.version || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 16;
       doc.text(
@@ -243,7 +245,7 @@ const ConsentDetailPage = () => {
           data?.consentMetaDataId?.methodOfCollection || "-"
         }`,
         marginX,
-        y
+        y,
       );
       y += 28;
 
@@ -254,19 +256,19 @@ const ConsentDetailPage = () => {
       doc.text(
         `Organization Name: ${data?.consentId?.dataEntityId?.name || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 16;
       doc.text(
         `Entity Type: ${data?.consentId?.dataEntityId?.entityType || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 16;
       doc.text(
         `Contact Email: ${data?.consentId?.dataEntityId?.contactEmail || "-"}`,
         marginX,
-        y
+        y,
       );
       y += 24;
 
@@ -381,6 +383,28 @@ const ConsentDetailPage = () => {
           </div>
         </div>
       </div>
+
+      {principalUser && role === "DATA_FIDUCIARY" && (
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm">
+          <div className="p-4 border-b">
+            <p className="font-semibold">Data Principal</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-xs text-gray-500">FULL NAME</p>
+              <p className="text-sm font-medium">
+                {principalUser.fullName || "-"}
+              </p>
+            </div>
+            <div>
+              <p className="text-xs text-gray-500">EMAIL</p>
+              <p className="text-sm font-medium">
+                {principalUser.email || "-"}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-4 flex justify-between items-start">
         <div className="flex gap-3">
