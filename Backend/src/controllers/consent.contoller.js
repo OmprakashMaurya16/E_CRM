@@ -6,6 +6,135 @@ const Purpose = require("../models/purpose.model");
 const User = require("../models/user.model");
 const Notification = require("../models/notification.model");
 
+// Create a static/demo consent for a specific Data Fiduciary
+const createDemoStaticConsent = async (req, res) => {
+  try {
+    const { userId, role } = req.user;
+
+    if (role !== "DATA_PRINCIPAL") {
+      return res.status(403).json({
+        success: false,
+        message: "Only Data Principals can give this consent",
+      });
+    }
+
+    // Hard-coded demo Data Fiduciary entity (OptiCare)
+    const fiduciaryEntityId = "695dea0a181bf6f1e9a88121";
+
+    const entity = await DataEntity.findOne({
+      _id: fiduciaryEntityId,
+      entityType: "DATA_FIDUCIARY",
+      status: "ACTIVE",
+    });
+
+    if (!entity) {
+      return res.status(400).json({
+        success: false,
+        message: "Demo Data Fiduciary entity not found or inactive",
+      });
+    }
+
+    const CONSENT_TITLE = "Demo Data Usage Consent";
+    const CONSENT_TYPE = "EXPLICIT";
+    const consentDescription =
+      "Static demo consent allowing OptiCare to process basic profile data for service improvement and personalized offers.";
+
+    let consent = await Consent.findOne({
+      dataEntityId: fiduciaryEntityId,
+      consentTitle: CONSENT_TITLE,
+      consentType: CONSENT_TYPE,
+    });
+
+    if (!consent) {
+      consent = await Consent.create({
+        consentTitle: CONSENT_TITLE,
+        consentType: CONSENT_TYPE,
+        consentDescription,
+        dataEntityId: fiduciaryEntityId,
+        status: "PENDING",
+      });
+    }
+
+    const PURPOSE_NAME = "Demo: Personalized Care & Offers";
+
+    let purpose = await Purpose.findOne({ purposeName: PURPOSE_NAME });
+    if (!purpose) {
+      purpose = await Purpose.create({
+        purposeName: PURPOSE_NAME,
+        description:
+          "Demo purpose for improving services, communications, and tailored offers for OptiCare customers.",
+        sector: "DEMO_HEALTHCARE",
+        isSensitive: false,
+      });
+    }
+
+    const version = req.body?.consentVersion || "v1.0";
+    const methodOfCollection = "ONLINE";
+
+    let meta = await ConsentMetaData.findOne({
+      consentId: consent._id,
+      version,
+      methodOfCollection,
+    });
+
+    if (!meta) {
+      meta = await ConsentMetaData.create({
+        consentId: consent._id,
+        version,
+        methodOfCollection,
+      });
+    }
+
+    const durationDays = Number(req.body?.durationDays) || 365;
+    const now = new Date();
+    const expiryAt = new Date(
+      now.getTime() + durationDays * 24 * 60 * 60 * 1000,
+    );
+
+    let record = await UserConsent.findOne({
+      userId,
+      consentId: consent._id,
+      purposeId: purpose._id,
+    });
+
+    if (!record) {
+      record = new UserConsent({
+        userId,
+        consentId: consent._id,
+        consentMetaDataId: meta._id,
+        purposeId: purpose._id,
+        status: "GRANTED",
+        givenAt: now,
+        expiryAt,
+      });
+    } else {
+      record.status = "GRANTED";
+      record.withdrawnAt = null;
+      record.givenAt = now;
+      record.expiryAt = expiryAt;
+    }
+
+    await record.save();
+
+    const populated = await UserConsent.findById(record._id).populate([
+      { path: "consentId", populate: { path: "dataEntityId" } },
+      { path: "purposeId" },
+      {
+        path: "consentMetaDataId",
+        select: "methodOfCollection version",
+      },
+      { path: "userId", select: "fullName email role" },
+    ]);
+
+    return res.status(201).json({ success: true, data: populated });
+  } catch (error) {
+    console.error("Create Demo Consent Error:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 const listAllUserConsents = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -18,8 +147,6 @@ const listAllUserConsents = async (req, res) => {
         select: "methodOfCollection version",
       },
     ]);
-
-    console.log(userConsents);
 
     res.status(200).json({ success: true, data: userConsents });
   } catch (error) {
@@ -552,4 +679,5 @@ module.exports = {
   renewUserConsent,
   renewFiduciaryUserConsent,
   withdrawFiduciaryUserConsent,
+  createDemoStaticConsent,
 };

@@ -35,7 +35,7 @@ const FiduciaryProcessorsTable = () => {
         <h3 className="font-semibold text-gray-900">Data Processors</h3>
         <span
           className="text-blue-600 text-sm cursor-pointer hover:underline"
-          onClick={() => navigate("/data-fiduciary?view=processors")}
+          onClick={() => navigate("/fiduciary/processors")}
         >
           View All →
         </span>

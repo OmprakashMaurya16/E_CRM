@@ -15,6 +15,7 @@ import AdminDashboard from "./pages/Admin/AdminDashboard";
 import ConsentDetailPage from "./pages/Data Principal/ConsentDetailPage";
 import DataProcessorPage from "./pages/Data Fiduciary/DataProcessorPage";
 import FiduciaryNotificationPage from "./pages/Data Fiduciary/FiduciaryNotificationPage";
+import AcceptConsentPage from "./pages/Data Principal/AcceptConsentPage";
 
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -101,6 +102,7 @@ const App = () => {
           <Route path="/my-consents" element={<MyConsentsPage />} />
           <Route path="/notifications" element={<NotificationsPage />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/accept-consent" element={<AcceptConsentPage />} />
           <Route path="/details" element={<ConsentDetailPage />} />
           <Route path="/details/:consentId" element={<ConsentDetailPage />} />
         </Route>

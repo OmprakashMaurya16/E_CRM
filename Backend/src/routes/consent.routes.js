@@ -11,11 +11,13 @@ const {
   renewUserConsent,
   renewFiduciaryUserConsent,
   withdrawFiduciaryUserConsent,
+  createDemoStaticConsent,
 } = require("../controllers/consent.contoller");
 const requireAuth = require("../middleware/requireAuth");
 
 router.get("/consents", requireAuth, listAllUserConsents);
 router.get("/consents/:consentId", requireAuth, singleUserConsent);
+router.post("/consents/demo-static", requireAuth, createDemoStaticConsent);
 router.post(
   "/consents/:userConsentId/withdraw",
   requireAuth,

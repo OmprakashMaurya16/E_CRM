@@ -16,6 +16,7 @@ export const getMenuByRole = (role) => {
         icon: LayoutDashboard,
       },
       { to: "/my-consents", label: "My Consents", icon: Shield },
+      { to: "/accept-consent", label: "Accept Consent", icon: Database },
     ],
     DATA_FIDUCIARY: [
       {
