@@ -135,6 +135,91 @@ const createDemoStaticConsent = async (req, res) => {
   }
 };
 
+// Get static/demo Data Fiduciary info used for the Accept Consent page
+const getDemoStaticFiduciary = async (req, res) => {
+  try {
+    const fiduciaryEntityId = "695dea0a181bf6f1e9a88121";
+
+    const entity = await DataEntity.findOne({
+      _id: fiduciaryEntityId,
+      entityType: "DATA_FIDUCIARY",
+    }).select("name contactEmail status createdAt updatedAt");
+
+    if (!entity) {
+      return res.status(404).json({
+        success: false,
+        message: "Demo Data Fiduciary entity not found",
+      });
+    }
+
+    return res.status(200).json({ success: true, data: entity });
+  } catch (error) {
+    console.error("Get Demo Fiduciary Error:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
+// Permanently delete a specific user's consent (Data Fiduciary context)
+// This removes the UserConsent record and all notifications linked to it,
+// so it will no longer appear on the Data Principal dashboard.
+const deleteFiduciaryUserConsent = async (req, res) => {
+  try {
+    const fiduciaryId = req.user?.entityId;
+    const role = req.user?.role;
+    const userConsentId = req.params.userConsentId;
+
+    if (!fiduciaryId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing fiduciary context" });
+    }
+
+    if (role !== "DATA_FIDUCIARY") {
+      return res.status(403).json({
+        success: false,
+        message: "Only Data Fiduciaries can delete consents in this way",
+      });
+    }
+
+    const record = await UserConsent.findById(userConsentId).populate({
+      path: "consentId",
+      populate: { path: "dataEntityId" },
+    });
+
+    if (!record) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Consent not found" });
+    }
+
+    const ownerEntityId = record?.consentId?.dataEntityId?._id;
+    if (!ownerEntityId || String(ownerEntityId) !== String(fiduciaryId)) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized to delete this consent",
+      });
+    }
+
+    // Delete all notifications tied to this user consent
+    await Notification.deleteMany({ userConsentId: record._id });
+
+    // Delete the user-consent record itself
+    await UserConsent.deleteOne({ _id: record._id });
+
+    return res.status(200).json({
+      success: true,
+      message: "Consent and related data deleted successfully",
+    });
+  } catch (error) {
+    console.error("Delete Fiduciary User Consent Error:", error.message);
+    return res
+      .status(500)
+      .json({ success: false, message: "Internal server error" });
+  }
+};
+
 const listAllUserConsents = async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -680,4 +765,6 @@ module.exports = {
   renewFiduciaryUserConsent,
   withdrawFiduciaryUserConsent,
   createDemoStaticConsent,
+  getDemoStaticFiduciary,
+  deleteFiduciaryUserConsent,
 };

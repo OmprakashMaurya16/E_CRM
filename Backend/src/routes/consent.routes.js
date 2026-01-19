@@ -12,12 +12,19 @@ const {
   renewFiduciaryUserConsent,
   withdrawFiduciaryUserConsent,
   createDemoStaticConsent,
+  getDemoStaticFiduciary,
+  deleteFiduciaryUserConsent,
 } = require("../controllers/consent.contoller");
 const requireAuth = require("../middleware/requireAuth");
 
 router.get("/consents", requireAuth, listAllUserConsents);
 router.get("/consents/:consentId", requireAuth, singleUserConsent);
 router.post("/consents/demo-static", requireAuth, createDemoStaticConsent);
+router.get(
+  "/consents/demo-static/fiduciary",
+  requireAuth,
+  getDemoStaticFiduciary,
+);
 router.post(
   "/consents/:userConsentId/withdraw",
   requireAuth,
@@ -31,6 +38,11 @@ router.get(
   "/fiduciary/user-consents/:userConsentId",
   requireAuth,
   getFiduciaryUserConsentDetail,
+);
+router.delete(
+  "/fiduciary/user-consents/:userConsentId",
+  requireAuth,
+  deleteFiduciaryUserConsent,
 );
 router.post(
   "/fiduciary/user-consents/:userConsentId/renew",

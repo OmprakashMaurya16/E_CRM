@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 
 const AcceptConsentPage = () => {
@@ -7,10 +7,43 @@ const AcceptConsentPage = () => {
   const [showDetails, setShowDetails] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [fiduciary, setFiduciary] = useState(null);
+  const [infoLoading, setInfoLoading] = useState(false);
+  const [infoError, setInfoError] = useState("");
 
   const CONSENT_VERSION = "v1.0";
   const CONSENT_DURATION_DAYS = 365;
   const API_BASE = import.meta.env.VITE_API_BASE_URL || "";
+
+  useEffect(() => {
+    const fetchFiduciary = async () => {
+      const token = localStorage.getItem("token");
+      if (!token) return;
+      try {
+        setInfoLoading(true);
+        setInfoError("");
+        const { data } = await axios.get(
+          `${API_BASE}/consents/demo-static/fiduciary`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        if (data?.success && data?.data) {
+          setFiduciary(data.data);
+        }
+      } catch (err) {
+        setInfoError(
+          err?.response?.data?.message || "Failed to load Data Fiduciary info.",
+        );
+      } finally {
+        setInfoLoading(false);
+      }
+    };
+
+    fetchFiduciary();
+  }, [API_BASE]);
 
   const handleAccept = async () => {
     if (!termsChecked || loading) return;
@@ -71,23 +104,34 @@ const AcceptConsentPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700">
           <div>
             <p className="font-medium text-gray-900">Data Fiduciary</p>
-            <p>Example Bank Pvt. Ltd.</p>
+            <p>{fiduciary?.name || "OptiCare"}</p>
+            {fiduciary?.contactEmail && (
+              <p className="text-xs text-gray-500 mt-0.5">
+                Contact: {fiduciary.contactEmail}
+              </p>
+            )}
           </div>
 
           <div>
             <p className="font-medium text-gray-900">Purpose of Processing</p>
             <p>
-              Account servicing, customer communication, and service improvement
-              activities strictly related to banking services.
+              Service provisioning, communication, and experience improvement
+              activities related to the OptiCare Data Fiduciary.
             </p>
           </div>
 
           <div>
             <p className="font-medium text-gray-900">Data Categories</p>
             <p>
-              Identity details, contact information, and transaction summaries
-              limited to the stated purpose.
+              Identity and contact details and limited financial information,
+              for example:
             </p>
+            <ul className="list-disc list-inside mt-1 space-y-0.5 text-xs text-gray-700">
+              <li>Official ID details (e.g., Aadhaar number in masked form)</li>
+              <li>Other KYC information (e.g., PAN, address proof)</li>
+              <li>Basic contact details (name, email, phone)</li>
+              <li>Relevant account or transaction summaries</li>
+            </ul>
           </div>
 
           <div>
@@ -111,6 +155,8 @@ const AcceptConsentPage = () => {
             </li>
           </ul>
         </div>
+
+        {infoError && <p className="text-xs text-red-600">{infoError}</p>}
 
         {/* View Full Terms */}
         <button
@@ -181,9 +227,32 @@ const AcceptConsentPage = () => {
 
             <div className="space-y-3 text-sm text-gray-700 max-h-80 overflow-y-auto">
               <p>
-                This consent is being obtained by Example Bank Pvt. Ltd. for
-                clearly defined banking-related purposes only.
+                This consent is being obtained by{" "}
+                {fiduciary?.name || "OptiCare"} for clearly defined
+                data-processing purposes only.
               </p>
+
+              <p className="font-medium text-gray-900 mt-2">
+                Types of data that may be collected
+              </p>
+              <ul className="list-disc list-inside space-y-1">
+                <li>
+                  Government-issued identifiers in masked or redacted form (for
+                  example Aadhaar or PAN details as required for KYC).
+                </li>
+                <li>
+                  KYC documents and demographic details (such as address, date
+                  of birth, and gender).
+                </li>
+                <li>
+                  Contact details, including your name, email address, and
+                  mobile number.
+                </li>
+                <li>
+                  Limited account or transaction-level summaries required to
+                  provide and improve services.
+                </li>
+              </ul>
 
               <p>
                 The consent remains valid for {CONSENT_DURATION_DAYS} days from

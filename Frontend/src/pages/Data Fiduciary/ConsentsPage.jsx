@@ -146,15 +146,15 @@ const ConsentsPage = () => {
     const total = consents.length;
     const withdrawn = consents.reduce(
       (acc, c) => acc + (c?.status === "WITHDRAWN" ? 1 : 0),
-      0
+      0,
     );
     const expired = consents.reduce(
       (acc, c) => acc + (c?.status === "EXPIRED" ? 1 : 0),
-      0
+      0,
     );
     const active = consents.reduce(
       (acc, c) => acc + (c?.status === "GRANTED" ? 1 : 0),
-      0
+      0,
     );
     return { total, withdrawn, expired, active };
   }, [consents]);
@@ -264,6 +264,8 @@ const ConsentsPage = () => {
                 onWithdraw={fetchConsents}
                 entityLabel="Data Principal"
                 entityName={getPrincipalName(c)}
+                onDelete={fetchConsents}
+                showDeleteForFiduciary
               />
             ))}
           </div>

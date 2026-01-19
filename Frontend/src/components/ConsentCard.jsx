@@ -40,6 +40,8 @@ const ConsentCard = ({
   entityLabel = "Data Fiduciary",
   entityName,
   viewDetailsTarget,
+  onDelete,
+  showDeleteForFiduciary = false,
 }) => {
   const navigate = useNavigate();
   const [imgError, setImgError] = useState(false);
@@ -71,6 +73,29 @@ const ConsentCard = ({
 
   const canWithdraw = status === "GRANTED";
   const canRenew = status === "EXPIRED" || status === "WITHDRAWN";
+
+  const handleDelete = async () => {
+    const ok = window.confirm(
+      "This will permanently delete this consent record and related data. Continue?",
+    );
+    if (!ok) return;
+    try {
+      const token = localStorage.getItem("token");
+      const base = import.meta.env.VITE_API_BASE_URL || "";
+      const endpoint = `${base}/fiduciary/user-consents/${consent?._id}`;
+      const res = await axios.delete(endpoint, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      toast.success(
+        res?.data?.message || "Consent and related data deleted successfully",
+      );
+      if (typeof onDelete === "function") onDelete();
+    } catch (err) {
+      toast.error(
+        err?.response?.data?.message || "Failed to delete consent record",
+      );
+    }
+  };
 
   const handleWithdraw = async () => {
     const ok = window.confirm(
@@ -166,9 +191,9 @@ const ConsentCard = ({
         </div>
       </div>
 
-      <div className="mt-4 flex items-center gap-2">
+      <div className="mt-4 flex flex-wrap items-center gap-2">
         <button
-          className="px-3 py-2 text-sm border rounded-lg hover:bg-gray-50"
+          className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm border rounded-lg hover:bg-gray-50 whitespace-nowrap"
           onClick={() =>
             viewDetailsTarget
               ? navigate(viewDetailsTarget)
@@ -194,7 +219,7 @@ const ConsentCard = ({
 
         {canWithdraw && (
           <button
-            className="px-3 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600"
+            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm bg-red-500 text-white rounded-lg hover:bg-red-600 whitespace-nowrap"
             onClick={handleWithdraw}
           >
             Withdraw
@@ -203,7 +228,7 @@ const ConsentCard = ({
 
         {canRenew && (
           <button
-            className="px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center gap-1"
+            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 gap-1 whitespace-nowrap"
             onClick={async () => {
               const ok = window.confirm(
                 "Are you sure? This will send a renew request to the Data Fiduciary.",
@@ -246,6 +271,15 @@ const ConsentCard = ({
             }}
           >
             <RefreshCw size={14} /> Renew
+          </button>
+        )}
+
+        {showDeleteForFiduciary && (
+          <button
+            className="flex-1 inline-flex items-center justify-center px-4 py-2 text-sm bg-red-100 text-red-700 rounded-lg hover:bg-red-200 whitespace-nowrap"
+            onClick={handleDelete}
+          >
+            Delete Consent
           </button>
         )}
       </div>
